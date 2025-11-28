@@ -39,6 +39,8 @@ function getIcon(name: string) {
       return require('../../assets/images/summary.png');
     case 'edit':
       return require('../../assets/images/edit.png');
+    case 'back':
+      return require('../../assets/images/back.png');
     default:
       return require('../../assets/images/default.png');
   }
