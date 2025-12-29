@@ -90,6 +90,9 @@ const styles = StyleSheet.create({
   darkText: {
     color: '#e6eef8',
   },
+  lightText: {
+    color: '#111827',
+  },
   noFileText: {
     fontSize: 15,
     textAlign: 'center',
@@ -97,6 +100,9 @@ const styles = StyleSheet.create({
   },
   darkMuted: {
     color: '#9aa4b2',
+  },
+  lightMuted: {
+    color: '#6b7280',
   },
   convertBtn: {
     backgroundColor: '#4dabf7',

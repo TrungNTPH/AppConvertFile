@@ -1,12 +1,181 @@
-import { StyleSheet, Text, View } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+} from "react-native";
+import Share from "react-native-share";
+
+import HeaderBack from "../components/HeaderBack";
+import {
+  getHistoryFiles,
+  deleteHistoryFile,
+} from "../utils/history/historyManager";
 
 export default function HistoryScreen() {
-  return (
-    <View>
-      <Text>HistoryScreen</Text>
+  const [files, setFiles] = useState<any[]>([]);
+
+  const load = async () => {
+    const data = await getHistoryFiles();
+    setFiles(data);
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const handleShare = async (path: string) => {
+    try {
+      await Share.open({
+        url: path,
+        failOnCancel: false,
+      });
+    } catch (e) {}
+  };
+
+  const handleDelete = (item: any) => {
+    Alert.alert(
+      "Xóa file",
+      "Bạn có chắc muốn xóa file này?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Xóa",
+          style: "destructive",
+          onPress: async () => {
+            await deleteHistoryFile(item);
+            load();
+          },
+        },
+      ]
+    );
+  };
+
+  const renderItem = ({ item }: any) => (
+    <View style={styles.card}>
+      <View style={styles.row}>
+        <Text style={styles.fileName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={styles.typeBadge}>
+          {item.type?.toUpperCase()}
+        </Text>
+      </View>
+
+      <Text style={styles.time}>
+        {new Date(item.createdAt).toLocaleString()}
+      </Text>
+
+      <View style={styles.actions}>
+        <TouchableOpacity
+          style={styles.actionBtn}
+          onPress={() => handleShare(item.path)}
+        >
+          <Text style={styles.actionText}>📤 Chia sẻ</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.actionBtn, styles.deleteBtn]}
+          onPress={() => handleDelete(item)}
+        >
+          <Text style={[styles.actionText, { color: "#e03131" }]}>
+            🗑 Xóa
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
-  )
+  );
+
+  return (
+    <View style={styles.container}>
+      <HeaderBack title="Lịch sử xử lý" />
+
+      <FlatList
+        data={files}
+        keyExtractor={(i) => i.path}
+        renderItem={renderItem}
+        contentContainerStyle={{ padding: 16 }}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>
+            Chưa có file nào được xử lý
+          </Text>
+        }
+      />
+    </View>
+  );
 }
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#f7f7f7",
+  },
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  fileName: {
+    fontSize: 16,
+    fontWeight: "600",
+    flex: 1,
+    marginRight: 8,
+  },
+
+  typeBadge: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#4dabf7",
+  },
+
+  time: {
+    marginTop: 6,
+    fontSize: 13,
+    color: "#888",
+  },
+
+  actions: {
+    flexDirection: "row",
+    marginTop: 12,
+  },
+
+  actionBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: "#f1f3f5",
+    marginRight: 10,
+  },
+
+  deleteBtn: {
+    backgroundColor: "#fff5f5",
+  },
+
+  actionText: {
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
+  emptyText: {
+    textAlign: "center",
+    marginTop: 60,
+    color: "#999",
+    fontSize: 15,
+  },
+});

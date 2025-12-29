@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,9 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconImage from '../components/IconImage';
+import {
+  getHistoryFiles,
+} from "../utils/history/historyManager";
 
 interface FeatureItem {
   id: string;
@@ -32,7 +35,53 @@ export default function HomeScreen() {
     { id: 'a2', title: 'Sửa lỗi chính tả', icon: 'edit', color: '#228be6', screen: 'FixGrammarScreen' },
   ];
 
+  const [recentHistory, setRecentHistory] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadRecentHistory();
+  }, []);
+
+  const loadRecentHistory = async () => {
+    const data = await getHistoryFiles();
+    // sort mới → cũ, lấy 5 item
+    const latest = data
+      .sort((a: any, b: any) => b.createdAt - a.createdAt)
+      .slice(0, 5);
+
+    setRecentHistory(latest);
+  };
+
   const navigation = useNavigation<any>();
+
+  const renderHistoryItem = ({ item }: any) => (
+    <TouchableOpacity
+      style={styles.historyItem}
+      onPress={() => navigation.navigate('HistoryScreen')}
+    >
+      <View style={styles.historyLeft}>
+        <IconImage
+          name={
+            item.type === 'ocr'
+              ? 'scanner'
+              : item.type === 'merge'
+                ? 'merge-type'
+                : 'description'
+          }
+          size={22}
+          color="#4dabf7"
+        />
+      </View>
+
+      <View style={{ flex: 1 }}>
+        <Text style={styles.historyName} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={styles.historyTime}>
+          {new Date(item.createdAt).toLocaleString()}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
 
 
   const renderCard = ({ item }: { item: FeatureItem }) => (
@@ -52,7 +101,7 @@ export default function HomeScreen() {
           <Text style={styles.helloText}>Xin chào 👋</Text>
         </View>
         <TouchableOpacity onPress={() => navigation.navigate('SettingScreen')}>
-        <IconImage name="setting" size={35} color="#555" />
+          <IconImage name="setting" size={35} color="#555" />
         </TouchableOpacity>
       </View>
 
@@ -90,12 +139,29 @@ export default function HomeScreen() {
   );
 
   return (
-    <FlatList
-      data={[]}
-      renderItem={null}
-      ListHeaderComponent={ListHeader}
-      showsVerticalScrollIndicator={false}
-    />
+    <View>
+      {recentHistory.length === 0 ? (
+        <Text style={styles.emptyHistory}>
+          Chưa có file nào gần đây
+        </Text>
+      ) : (
+        <FlatList
+          data={recentHistory}
+          ListHeaderComponent={ListHeader}
+          keyExtractor={(item) => item.path}
+          renderItem={renderHistoryItem}
+        />
+      )}
+
+      <TouchableOpacity
+        style={styles.viewAllBtn}
+        onPress={() => navigation.navigate('HistoryScreen')}
+      >
+        <Text style={styles.viewAllText}>
+          Xem tất cả →
+        </Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -156,4 +222,58 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#333',
   },
+  historyItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#fff',
+  padding: 12,
+  borderRadius: 14,
+  marginHorizontal: 20,
+  marginBottom: 10,
+  shadowColor: '#000',
+  shadowOpacity: 0.06,
+  shadowRadius: 6,
+  elevation: 2,
+},
+
+historyLeft: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: '#e7f5ff',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginRight: 12,
+},
+
+historyName: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#333',
+},
+
+historyTime: {
+  fontSize: 12,
+  color: '#999',
+  marginTop: 2,
+},
+
+emptyHistory: {
+  color: '#999',
+  fontSize: 14,
+  marginHorizontal: 20,
+  marginBottom: 10,
+},
+
+viewAllBtn: {
+  alignItems: 'flex-end',
+  marginHorizontal: 20,
+  marginBottom: 20,
+},
+
+viewAllText: {
+  color: '#4dabf7',
+  fontWeight: '600',
+},
+
 });
