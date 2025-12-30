@@ -138,31 +138,30 @@ export default function HomeScreen() {
     </View>
   );
 
-  return (
-    <View>
-      {recentHistory.length === 0 ? (
+return (
+  <View style={{ flex: 1 }}>
+    <FlatList
+      data={recentHistory}
+      keyExtractor={(item, index) => item?.path ?? index.toString()}
+      renderItem={
+        recentHistory.length === 0
+          ? null
+          : renderHistoryItem
+      }
+      ListHeaderComponent={ListHeader}
+      ListEmptyComponent={
         <Text style={styles.emptyHistory}>
           Chưa có file nào gần đây
         </Text>
-      ) : (
-        <FlatList
-          data={recentHistory}
-          ListHeaderComponent={ListHeader}
-          keyExtractor={(item) => item.path}
-          renderItem={renderHistoryItem}
-        />
-      )}
+      }
+      contentContainerStyle={{
+        paddingBottom: 30,
+      }}
+      showsVerticalScrollIndicator={false}
+    />
+  </View>
+);
 
-      <TouchableOpacity
-        style={styles.viewAllBtn}
-        onPress={() => navigation.navigate('HistoryScreen')}
-      >
-        <Text style={styles.viewAllText}>
-          Xem tất cả →
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
 }
 
 const styles = StyleSheet.create({
@@ -263,6 +262,8 @@ emptyHistory: {
   fontSize: 14,
   marginHorizontal: 20,
   marginBottom: 10,
+  alignContent: 'center',
+  textAlign: 'center',
 },
 
 viewAllBtn: {

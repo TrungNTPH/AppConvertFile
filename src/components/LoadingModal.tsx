@@ -25,7 +25,7 @@ export default function LoadingModal({
           <ActivityIndicator size="large" color="#4dabf7" />
           <Text style={styles.text}>{message}</Text>
 
-          {progress && (
+          {typeof progress === "number" && (
             <Text style={styles.progress}>{progress}%</Text>
           )}
         </View>
