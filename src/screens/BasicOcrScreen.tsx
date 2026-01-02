@@ -54,11 +54,9 @@ const handleOCR = async () => {
   let timer: number | null = null;
 
   try {
-    // ✅ bật loading + progress NGAY TỪ ĐẦU
     setLoading(true);
     setProgress(0);
 
-    // fake progress chạy song song
     timer = fakeProgress();
 
     const safeUri = await prepareImageForOCR(image.uri);

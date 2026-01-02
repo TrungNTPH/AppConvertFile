@@ -1,71 +1,135 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import HeaderBack from '../components/HeaderBack';
-import FilePicker from '../components/FilePicker';
-import { ItemFile } from '../components/ItemFile';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Alert,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
+import FilePicker from "../components/FilePicker";
+import HeaderBack from "../components/HeaderBack";
+import OcrResultModal from "../components/ocr/OcrResultModal";
+import { addHistoryFile } from "../utils/history/historyManager";
+import { exportTextToDocx } from "../components/ocr/exportDocx";
+import LoadingModal from "../components/LoadingModal";
+import pdf from "pdf-parse";
 
 export default function PdfToTextScreen() {
-  const [file, setFile] = useState<any | null>(null);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [file, setFile] = useState<any>(null);
+  const [pdfText, setPdfText] = useState("");
+  const [showResult, setShowResult] = useState(false);
+  const [docPath, setDocPath] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    const loadTheme = async () => {
-      const savedTheme = await AsyncStorage.getItem('darkmode');
-      if (savedTheme === 'active') {
-        setIsDarkMode(true);
-      }
-    };
-    loadTheme();
-  }, []);
+  const handlePick = (files: any[]) => {
+    if (!files?.length) return;
 
-  const handlePick = (pickedFiles: any[]) => {
-    const pdfFile = pickedFiles.find((f) => f.name.endsWith('.pdf'));
+    const pdfFile = files.find((f) => f.name.endsWith(".pdf"));
     if (pdfFile) {
       setFile(pdfFile);
     } else {
-      Alert.alert('Vui lòng chọn một file PDF.');
+      Alert.alert("Vui lòng chọn một file PDF.");
     }
   };
 
-  const convertToText = () => {
-    if (!file) {
-      Alert.alert('Vui lòng chọn một file PDF để chuyển đổi.');
-      return;
-    }
+  const fakeProgress = () => {
+    setProgress(10);
 
-    console.log('Ready to convert:', file);
-    Alert.alert('Chức năng chuyển đổi PDF sang văn bản chưa xử lý.');
+    const timer = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 90) {
+          clearInterval(timer);
+          return p;
+        }
+        return p + 10;
+      });
+    }, 300);
+
+    return timer;
+  };
+
+  const handlePdfToText = async () => {
+    if (!file) return;
+
+    let timer: number | null = null;
+
+    try {
+      setLoading(true);
+      setProgress(0);
+
+      timer = fakeProgress();
+
+      // Đọc nội dung file PDF
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfData = await pdf(arrayBuffer);
+      const text = pdfData.text || "(Không thể trích xuất nội dung từ file PDF)";
+
+      // Xuất nội dung ra file .docx
+      const filePath = await exportTextToDocx(text);
+
+      await addHistoryFile(filePath, `PDF_${Date.now()}.docx`, "pdf-to-text");
+
+      // ✅ Hoàn thành
+      clearInterval(timer);
+      setProgress(100);
+
+      setTimeout(() => {
+        setLoading(false);
+        setProgress(0);
+        setPdfText(text);
+        setDocPath(filePath);
+        setShowResult(true);
+      }, 500);
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Lỗi", "Không thể chuyển đổi file PDF.");
+      setLoading(false);
+      setProgress(0);
+    }
   };
 
   return (
-    <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
-      <View style={{ marginTop: 20 }}>
-        <HeaderBack title="Chuyển PDF sang Văn bản" />
-      </View>
+    <View style={styles.container}>
+      <HeaderBack title="Chuyển PDF sang Văn bản" />
 
-      <View>
+      {/* 📂 PICK FILE */}
+      <View style={styles.section}>
         <FilePicker onPick={handlePick} allowMultiple={false} />
       </View>
 
-      <Text style={[styles.listTitle, isDarkMode ? styles.darkText : styles.lightText]}>File đã chọn:</Text>
-      {file ? (
-        <ItemFile
-          index={0}
-          file={file}
-          onDelete={() => setFile(null)}
-        />
-      ) : (
-        <Text style={[styles.noFileText, isDarkMode ? styles.darkMuted : styles.lightMuted]}>
-          Chưa có file nào được chọn.
-        </Text>
+      {/* 🖼 PREVIEW */}
+      {file && (
+        <View style={styles.card}>
+          <Text style={styles.label}>File đã chọn</Text>
+
+          <Text style={styles.fileName} numberOfLines={1}>
+            {file.name}
+          </Text>
+
+          <TouchableOpacity
+            style={styles.convertButton}
+            onPress={handlePdfToText}
+            disabled={loading}
+          >
+            <Text style={styles.convertButtonText}>🔄 Chuyển đổi</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
-      {file && (
-        <TouchableOpacity style={styles.convertBtn} onPress={convertToText}>
-          <Text style={styles.convertText}>Chuyển đổi</Text>
-        </TouchableOpacity>
-      )}
+      <LoadingModal
+        visible={loading}
+        progress={progress}
+        message="Đang chuyển đổi file PDF..."
+      />
+
+      <OcrResultModal
+        visible={showResult}
+        text={pdfText}
+        filePath={docPath!}
+        onClose={() => setShowResult(false)}
+      />
     </View>
   );
 }
@@ -73,51 +137,46 @@ export default function PdfToTextScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    backgroundColor: "#f7f8fa",
   },
-  lightContainer: {
-    backgroundColor: '#f7f7f7',
+
+  section: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
   },
-  darkContainer: {
-    backgroundColor: '#0b1220',
+
+  card: {
+    margin: 16,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    elevation: 3,
   },
-  listTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 10,
-    marginBottom: 6,
+
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 8,
+    color: "#333",
   },
-  lightText: {
-    color: '#111827',
+
+  fileName: {
+    marginTop: 8,
+    fontSize: 13,
+    color: "#666",
   },
-  darkText: {
-    color: '#e6eef8',
-  },
-  noFileText: {
-    fontSize: 15,
-    textAlign: 'center',
-    marginVertical: 20,
-  },
-  lightMuted: {
-    color: '#6b7280',
-  },
-  darkMuted: {
-    color: '#9aa4b2',
-  },
-  convertBtn: {
-    backgroundColor: '#4dabf7',
-    padding: 15,
+
+  convertButton: {
+    marginTop: 14,
+    backgroundColor: "#4dabf7",
+    paddingVertical: 14,
     borderRadius: 10,
-    margin: 20,
-    textAlign: 'center',
-    fontWeight: '700',
-    fontSize: 17,
-    boxShadow: '0 6px 18px rgba(59,130,246,0.18)',
+    alignItems: "center",
   },
-  convertText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 17,
-    textAlign: 'center',
+
+  convertButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

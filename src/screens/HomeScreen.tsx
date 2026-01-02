@@ -28,6 +28,8 @@ export default function HomeScreen() {
     { id: '4', title: 'Lịch sử', icon: 'history', color: '#ffa94d', screen: 'HistoryScreen' },
     { id: '5', title: 'Ghép PDF', icon: 'merge-type', color: '#9775fa', screen: 'MergePdfScreen' },
     { id: '6', title: 'OCR cơ bản', icon: 'scanner', color: '#20c997', screen: 'BasicOcrScreen' },
+    { id: '7', title: 'Quét tài liệu', icon: 'scanner', color: '#4dabf7', screen: 'ScanDocumentScreen' },
+
   ];
 
   const aiFeatures: FeatureItem[] = [

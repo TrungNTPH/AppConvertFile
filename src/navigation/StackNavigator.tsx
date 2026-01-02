@@ -9,7 +9,7 @@ import BasicOcrScreen from '../screens/BasicOcrScreen';
 import SummaryScreen from '../screens/SummaryScreen';
 import FixGrammarScreen from '../screens/FixGrammarScreen';
 import SettingScreen from '../screens/SettingScreen';
-
+import ScanDocumentScreen from "../screens/ScanDocumentScreen";
 const Stack = createNativeStackNavigator();
 
 export default function StackNavigator() {
@@ -25,6 +25,7 @@ export default function StackNavigator() {
             <Stack.Screen name="MergePdfScreen" component={MergePdfScreen} />
             <Stack.Screen name="BasicOcrScreen" component={BasicOcrScreen} />
             <Stack.Screen name="SettingScreen" component={SettingScreen} />
+            <Stack.Screen name="ScanDocumentScreen" component={ScanDocumentScreen} />
             {/* AI Tools */}
             <Stack.Screen name="SummaryScreen" component={SummaryScreen} />
             <Stack.Screen name="FixGrammarScreen" component={FixGrammarScreen} />
