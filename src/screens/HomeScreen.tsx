@@ -23,7 +23,7 @@ interface FeatureItem {
 export default function HomeScreen() {
   const normalFeatures: FeatureItem[] = [
     { id: '1', title: 'PDF → Text', icon: 'picture-as-pdf', color: '#ff6b6b', screen: 'PdfToTextScreen' },
-    { id: '2', title: 'Image → PDF', icon: 'image', color: '#4dabf7', screen: 'ImageToPdfScreen' },
+    { id: '2', title: 'PDF -> Image', icon: 'image', color: '#4dabf7', screen: 'PdfToImageScreen' },
     { id: '3', title: 'Text → PDF', icon: 'text-fields', color: '#51cf66', screen: 'TextToPdfScreen' },
     { id: '4', title: 'Lịch sử', icon: 'history', color: '#ffa94d', screen: 'HistoryScreen' },
     { id: '5', title: 'Ghép PDF', icon: 'merge-type', color: '#9775fa', screen: 'MergePdfScreen' },

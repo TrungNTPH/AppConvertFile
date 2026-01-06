@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
 import PdfToTextScreen from '../screens/PdfToTextScreen';
-import ImageToPdfScreen from '../screens/ImageToPdfScreen';
+import ImageToPdfScreen from '../screens/PdfToImageScreen';
 import TextToPdfScreen from '../screens/TextToPdfScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import MergePdfScreen from '../screens/MergePdfScreen';
@@ -19,7 +19,7 @@ export default function StackNavigator() {
 
             {/* Normal features */}
             <Stack.Screen name="PdfToTextScreen" component={PdfToTextScreen} />
-            <Stack.Screen name="ImageToPdfScreen" component={ImageToPdfScreen} />
+            <Stack.Screen name="PdfToImageScreen" component={ImageToPdfScreen} />
             <Stack.Screen name="TextToPdfScreen" component={TextToPdfScreen} />
             <Stack.Screen name="HistoryScreen" component={HistoryScreen} />
             <Stack.Screen name="MergePdfScreen" component={MergePdfScreen} />
