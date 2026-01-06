@@ -6,18 +6,16 @@ import {
     Image,
     Alert,
     StyleSheet,
+    ScrollView,
 } from "react-native";
 import HeaderBack from "../components/HeaderBack";
 import LoadingModal from "../components/LoadingModal";
 import DocumentScanner from "react-native-document-scanner-plugin";
-import { ocrImageOffline } from "../utils/ocrImageOffline";
-import { prepareImageForOCR } from "../utils/prepareImageForOCR";
 import RNFS from "react-native-fs";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
-import fontkit from "@pdf-lib/fontkit";
+import { PDFDocument } from "pdf-lib";
 
 export default function ScanDocumentScreen() {
-    const [scannedImage, setScannedImage] = useState<string | null>(null); 
+    const [scannedImages, setScannedImages] = useState<string[]>([]); // Lưu danh sách ảnh đã quét
     const [loading, setLoading] = useState(false);
     const [progress, setProgress] = useState(0);
 
@@ -42,10 +40,10 @@ export default function ScanDocumentScreen() {
             setLoading(true);
             setProgress(0);
             fakeProgress();
-            const { scannedImages } = await DocumentScanner.scanDocument();
+            const { scannedImages: newScannedImages } = await DocumentScanner.scanDocument();
 
-            if (scannedImages && scannedImages.length > 0) {
-                setScannedImage(scannedImages[0]);
+            if (newScannedImages && newScannedImages.length > 0) {
+                setScannedImages((prevImages) => [...prevImages, ...newScannedImages]); // Thêm ảnh mới vào danh sách
             } else {
                 Alert.alert("No document scanned", "Please try again.");
             }
@@ -58,9 +56,9 @@ export default function ScanDocumentScreen() {
         }
     };
 
-    const handleOCRAndExportPDF = async () => {
-        if (!scannedImage) {
-            Alert.alert("No image", "Please scan a document first.");
+    const handleExportPDF = async () => {
+        if (scannedImages.length === 0) {
+            Alert.alert("No images", "Please scan at least one document first.");
             return;
         }
 
@@ -71,43 +69,42 @@ export default function ScanDocumentScreen() {
             setProgress(0);
             timer = fakeProgress();
 
-            const safeUri = await prepareImageForOCR(scannedImage);
+            for (const [index, imagePath] of scannedImages.entries()) {
+                const pdfDoc = await PDFDocument.create();
+                const page = pdfDoc.addPage([595.28, 841.89]);
+                const { width, height } = page.getSize();
 
-            const ocrText = await ocrImageOffline(safeUri);
+                const imageBytes = await RNFS.readFile(imagePath, "base64");
+                const embeddedImage = await pdfDoc.embedJpg(imageBytes);
 
-            const pdfDoc = await PDFDocument.create();
+                const imageDims = embeddedImage.scaleToFit(width - 100, height - 100);
 
-            pdfDoc.registerFontkit(fontkit);
+                page.drawImage(embeddedImage, {
+                    x: (width - imageDims.width) / 2,
+                    y: (height - imageDims.height) / 2,
+                    width: imageDims.width,
+                    height: imageDims.height,
+                });
 
-            const page = pdfDoc.addPage([595.28, 841.89]);
-            const { width, height } = page.getSize();
+                const pdfBytes = await pdfDoc.save();
 
-            const fontBytes = await RNFS.readFileAssets("fonts/Roboto-Regular.ttf", "base64");
-            const customFont = await pdfDoc.embedFont(Uint8Array.from(atob(fontBytes), c => c.charCodeAt(0)));
+                const pdfPath = `${RNFS.DownloadDirectoryPath}/ScannedDocument_${index + 1}_${Date.now()}.pdf`;
+                await RNFS.writeFile(pdfPath, Buffer.from(pdfBytes).toString("base64"), "base64");
 
-            page.drawText(ocrText, {
-                x: 50,
-                y: height - 50,
-                size: 12,
-                font: customFont,
-                color: rgb(0, 0, 0),
-            });
+                console.log(`PDF saved: ${pdfPath}`);
+            }
 
-            const pdfBytes = await pdfDoc.save();
-
-            const pdfPath = `${RNFS.DownloadDirectoryPath}/ScannedDocument_${Date.now()}.pdf`;
-            await RNFS.writeFile(pdfPath, Buffer.from(pdfBytes).toString("base64"), "base64");
-
-            Alert.alert("Success", `PDF has been saved to ${pdfPath}`);
+            Alert.alert("Success", "All images have been exported as separate PDFs.");
         } catch (error) {
             console.error(error);
-            Alert.alert("Error", "Failed to process OCR or export PDF.");
+            Alert.alert("Error", "Failed to export PDFs.");
         } finally {
             if (timer) clearInterval(timer);
             setLoading(false);
             setProgress(0);
         }
     };
+
     return (
         <View style={styles.container}>
             <HeaderBack title="Quét tài liệu" />
@@ -121,23 +118,27 @@ export default function ScanDocumentScreen() {
                 <Text style={styles.scanButtonText}>📄 Quét tài liệu</Text>
             </TouchableOpacity>
 
-            {/* Hiển thị ảnh đã scan */}
-            {scannedImage && (
-                <View style={styles.imageContainer}>
-                    <Text style={styles.label}>Ảnh đã quét:</Text>
-                    <Image
-                        source={{ uri: scannedImage }}
-                        style={styles.image}
-                        resizeMode="contain"
-                    />
-                </View>
+            {/* Hiển thị danh sách ảnh đã quét */}
+            {scannedImages.length > 0 && (
+                <ScrollView style={styles.imageList}>
+                    {scannedImages.map((image, index) => (
+                        <View key={index} style={styles.imageContainer}>
+                            <Text style={styles.label}>Ảnh {index + 1}:</Text>
+                            <Image
+                                source={{ uri: image }}
+                                style={styles.image}
+                                resizeMode="contain"
+                            />
+                        </View>
+                    ))}
+                </ScrollView>
             )}
 
-            {/* Nút OCR và xuất PDF */}
-            {scannedImage && (
+            {/* Nút xuất PDF */}
+            {scannedImages.length > 0 && (
                 <TouchableOpacity
                     style={styles.exportButton}
-                    onPress={handleOCRAndExportPDF}
+                    onPress={handleExportPDF}
                     disabled={loading}
                 >
                     <Text style={styles.exportButtonText}>📄 Xuất PDF</Text>
@@ -175,8 +176,12 @@ const styles = StyleSheet.create({
         fontWeight: "700",
     },
 
-    imageContainer: {
+    imageList: {
         marginTop: 20,
+    },
+
+    imageContainer: {
+        marginBottom: 20,
         alignItems: "center",
     },
 
