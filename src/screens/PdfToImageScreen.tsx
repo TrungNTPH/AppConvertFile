@@ -37,8 +37,8 @@ export default function PdfToImageScreen() {
     }
 
     try {
-      const result = await convert(file.uri); 
-      setImages(result.outputFiles || []); 
+      const result = await convert(file.uri);
+      setImages(result.outputFiles || []);
       Alert.alert('Chuyển đổi thành công!', `Đã tạo ${(result.outputFiles ?? []).length} hình ảnh.`);
     } catch (error) {
       console.error('Error converting PDF to images:', error);
@@ -53,17 +53,17 @@ export default function PdfToImageScreen() {
     }
 
     try {
-      const saveDirectory = `${RNFS.DownloadDirectoryPath}/ConvertedImages`; 
+      const saveDirectory = `${RNFS.DownloadDirectoryPath}/ConvertedImages`;
       await RNFS.mkdir(saveDirectory);
 
       const savePromises = images.map(async (imageUri, index) => {
         const fileName = `image_${index + 1}.jpg`;
         const destPath = `${saveDirectory}/${fileName}`;
-        await RNFS.copyFile(imageUri, destPath); 
+        await RNFS.copyFile(imageUri, destPath);
         return destPath;
       });
 
-      const savedFiles = await Promise.all(savePromises); 
+      const savedFiles = await Promise.all(savePromises);
       Alert.alert('Lưu thành công!', `Đã lưu ${savedFiles.length} hình ảnh vào thư mục ConvertedImages.`);
     } catch (error) {
       console.error('Error saving images:', error);
@@ -101,7 +101,7 @@ export default function PdfToImageScreen() {
           <ScrollView>
             <Text style={[styles.listTitle, isDarkMode ? styles.darkText : styles.lightText]}>Hình ảnh đã tạo:</Text>
             {images.map((imageUri, index) => (
-              <Image key={index} source={{ uri: imageUri }} style={styles.image} />
+              <Image key={index} source={{ uri: `file://${imageUri}` }} style={styles.image} />
             ))}
           </ScrollView>
           <TouchableOpacity style={styles.saveBtn} onPress={saveImages}>
