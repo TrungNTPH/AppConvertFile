@@ -1,97 +1,180 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 📄 AppConvert – Document Scanner & Converter (React Native)
 
-# Getting Started
+AppConvert is a mobile application built with **React Native (CLI)** that allows users to **scan documents, perform OCR, merge PDFs, convert files, and summarize text using AI**.  
+The app is designed to work **offline-first where possible** and supports multiple document workflows on mobile devices.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+---
 
-## Step 1: Start Metro
+## ✨ Features
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+- 📷 **Scan documents** using the device camera
+- 🔍 **OCR (Optical Character Recognition)** for images and scanned documents
+- 📄 **Merge multiple PDF files** into a single document
+- 🖼️ **Convert PDF pages to images**
+- 📝 **Export OCR results to DOCX**
+- 🧠 **AI text summarization**
+- 🕘 **History management** for processed files
+- 📤 **Share and download files**
+- ⚡ Optimized for mobile performance
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+---
 
-```sh
-# Using npm
-npm start
+## 🧱 Tech Stack
 
-# OR using Yarn
-yarn start
-```
+- **React Native (CLI)**
+- **Expo (Bare / Modules usage)**
+- **TypeScript**
+- **React Navigation**
+- **ML Kit OCR**
+- **PDF & DOCX processing**
+- **Axios for API requests**
 
-## Step 2: Build and run your app
+---
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+## 📁 Project Structure
 
-### Android
+```text
+src
+ ┣ components
+ ┃ ┣ docx
+ ┃ ┃ ┗ downloadDocFile.ts
+ ┃ ┣ ocr
+ ┃ ┃ ┣ exportDocx.ts
+ ┃ ┃ ┗ OcrResultModal.tsx
+ ┃ ┣ pdf
+ ┃ ┃ ┣ MergePDF.ts
+ ┃ ┃ ┣ PdfPreview.tsx
+ ┃ ┃ ┗ PdfResultModal.tsx
+ ┃ ┣ summary
+ ┃ ┃ ┗ SummaryResultModal.tsx
+ ┃ ┣ DowloadFile.tsx
+ ┃ ┣ FilePicker.tsx
+ ┃ ┣ HeaderBack.tsx
+ ┃ ┣ HelpModal.tsx
+ ┃ ┣ IconImage.tsx
+ ┃ ┣ ItemFile.tsx
+ ┃ ┗ LoadingModal.tsx
+ ┣ navigation
+ ┃ ┗ StackNavigator.tsx
+ ┣ screens
+ ┃ ┣ BasicOcrScreen.tsx
+ ┃ ┣ HistoryScreen.tsx
+ ┃ ┣ HomeScreen.tsx
+ ┃ ┣ MergePdfScreen.tsx
+ ┃ ┣ PdfToImageScreen.tsx
+ ┃ ┣ ScanDocumentScreen.tsx
+ ┃ ┣ SettingScreen.tsx
+ ┃ ┗ SummaryScreen.tsx
+ ┣ style
+ ┃ ┗ style.css
+ ┗ utils
+ ┃ ┣ ai
+ ┃ ┃ ┗ summarizeText.ts
+ ┃ ┣ extract
+ ┃ ┃ ┣ extractDocxText.ts
+ ┃ ┃ ┗ readTextFile.ts
+ ┃ ┣ history
+ ┃ ┃ ┣ historyCleanup.ts
+ ┃ ┃ ┗ historyManager.ts
+ ┃ ┣ validate
+ ┃ ┃ ┗ validatePdf.ts
+ ┃ ┣ constants.ts
+ ┃ ┣ env.d.ts
+ ┃ ┣ ocrImageOffline.ts
+ ┃ ┗ prepareImageForOCR.ts
+📦 Main Dependencies
+Core
+react
 
-```sh
-# Using npm
-npm run android
+react-native
 
-# OR using Yarn
-yarn android
-```
+expo
 
-### iOS
+expo-file-system
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+expo-asset
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+Navigation
+@react-navigation/native
 
-```sh
-bundle install
-```
+@react-navigation/native-stack
 
-Then, and every time you update your native dependencies, run:
+@react-navigation/bottom-tabs
 
-```sh
-bundle exec pod install
-```
+OCR & Scanning
+rn-mlkit-ocr
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+react-native-document-scanner-plugin
 
-```sh
-# Using npm
-npm run ios
+PDF & DOCX
+pdf-lib
 
-# OR using Yarn
-yarn ios
-```
+react-native-pdf
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+react-native-pdf-to-image
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+react-native-pdf-from-image
 
-## Step 3: Modify your app
+react-native-pdf-renderer
 
-Now that you have successfully run the app, let's make changes!
+docx
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+jszip
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+Utilities
+axios
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+@react-native-async-storage/async-storage
 
-## Congratulations! :tada:
+react-native-share
 
-You've successfully run and modified your React Native App. :partying_face:
+react-native-blob-util
 
-### Now what?
+react-native-fs
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+react-native-permissions
 
-# Troubleshooting
+react-native-paper
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+🚀 Getting Started
+1️⃣ Install dependencies
+bash
+Sao chép mã
+npm install
+2️⃣ Run Metro
+bash
+Sao chép mã
+npx react-native start
+3️⃣ Run on Android
+bash
+Sao chép mã
+npx react-native run-android
+4️⃣ Run with Expo (for Expo Go testing)
+bash
+Sao chép mã
+npx expo start
+🔐 Environment Variables
+Create a .env file:
 
-# Learn More
+env
+Sao chép mã
+HF_API_URL=your_api_url
+HF_TOKEN=your_api_token
+🧪 Supported Platforms
+✅ Android (APK / AAB)
 
-To learn more about React Native, take a look at the following resources:
+✅ iOS (Expo Go / TestFlight via EAS)
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+❌ Web (not supported)
+
+📌 Notes
+Some features (OCR, scanning) require camera permissions
+
+iOS builds are handled via EAS Build (no Mac required)
+
+PDF and OCR processing is optimized for mobile memory limits
+
+📄 License
+MIT License
+
+Feel free to contribute or open an issue!
