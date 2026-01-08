@@ -2,15 +2,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import RNFS from "react-native-fs";
 import {
   HISTORY_KEY,
-  MAX_HISTORY_FILES,
-  MAX_FILE_DAYS,
 } from "../constants";
 import { cleanupHistory } from "./historyCleanup";
 
 export type HistoryFile = {
   path: string;
   name: string;
-  type: "ocr" | "pdf" | "merge";
+  type: "ocr" | "pdf" | "merge" | "pdf to image" | "scan";
   createdAt: number;
 };
 

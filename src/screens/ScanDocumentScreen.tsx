@@ -10,14 +10,18 @@ import {
 } from "react-native";
 import HeaderBack from "../components/HeaderBack";
 import LoadingModal from "../components/LoadingModal";
+import HelpModal from "../components/HelpModal";
+import { addHistoryFile } from "../utils/history/historyManager";
 import DocumentScanner from "react-native-document-scanner-plugin";
 import RNFS from "react-native-fs";
 import { PDFDocument } from "pdf-lib";
+import IconImage from "../components/IconImage";
 
 export default function ScanDocumentScreen() {
-    const [scannedImages, setScannedImages] = useState<string[]>([]); // Lưu danh sách ảnh đã quét
+    const [scannedImages, setScannedImages] = useState<string[]>([]); 
     const [loading, setLoading] = useState(false);
     const [progress, setProgress] = useState(0);
+    const [showHelp, setShowHelp] = useState(false);
 
     const fakeProgress = () => {
         setProgress(10);
@@ -45,10 +49,10 @@ export default function ScanDocumentScreen() {
             if (newScannedImages && newScannedImages.length > 0) {
                 setScannedImages((prevImages) => [...prevImages, ...newScannedImages]); // Thêm ảnh mới vào danh sách
             } else {
-                Alert.alert("No document scanned", "Please try again.");
+                Alert.alert("Không có tài liệu nào được scan", "Vui lòng thử lại.");
             }
         } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : "An error occurred while scanning.";
+            const errorMessage = error instanceof Error ? error.message : "Có lỗi khi đang scan.";
             Alert.alert("Scan Error", errorMessage);
         } finally {
             setLoading(false);
@@ -58,7 +62,7 @@ export default function ScanDocumentScreen() {
 
     const handleExportPDF = async () => {
         if (scannedImages.length === 0) {
-            Alert.alert("No images", "Please scan at least one document first.");
+            Alert.alert("Không có hình ảnh nào", "Vui lòng quét ít nhất một tài liệu trước.");
             return;
         }
 
@@ -77,7 +81,10 @@ export default function ScanDocumentScreen() {
                 const imageBytes = await RNFS.readFile(imagePath, "base64");
                 const embeddedImage = await pdfDoc.embedJpg(imageBytes);
 
-                const imageDims = embeddedImage.scaleToFit(width - 100, height - 100);
+                const imageDims = embeddedImage.scaleToFit(
+                    width - 100,
+                    height - 100
+                );
 
                 page.drawImage(embeddedImage, {
                     x: (width - imageDims.width) / 2,
@@ -88,16 +95,30 @@ export default function ScanDocumentScreen() {
 
                 const pdfBytes = await pdfDoc.save();
 
-                const pdfPath = `${RNFS.DownloadDirectoryPath}/ScannedDocument_${index + 1}_${Date.now()}.pdf`;
-                await RNFS.writeFile(pdfPath, Buffer.from(pdfBytes).toString("base64"), "base64");
+                const fileName = `Scan_${Date.now()}_${index + 1}.pdf`;
+                const pdfPath = `${RNFS.DownloadDirectoryPath}/${fileName}`;
 
-                console.log(`PDF saved: ${pdfPath}`);
+                await RNFS.writeFile(
+                    pdfPath,
+                    Buffer.from(pdfBytes).toString("base64"),
+                    "base64"
+                );
+
+                await addHistoryFile(
+                    pdfPath,
+                    fileName,
+                    "scan"
+                );
+
             }
 
-            Alert.alert("Success", "All images have been exported as separate PDFs.");
+            Alert.alert(
+                "Thành công",
+                "Tài liệu đã được xuất PDF và lưu vào History"
+            );
         } catch (error) {
             console.error(error);
-            Alert.alert("Error", "Failed to export PDFs.");
+            Alert.alert("Lỗi", "Lỗi khi xuất PDF.");
         } finally {
             if (timer) clearInterval(timer);
             setLoading(false);
@@ -105,10 +126,12 @@ export default function ScanDocumentScreen() {
         }
     };
 
-    return (
-        <View style={styles.container}>
-            <HeaderBack title="Quét tài liệu" />
 
+    return (
+        <View style={{flex: 1}}>
+            <HeaderBack title="Quét tài liệu" />
+            <View style={styles.container}>
+                
             {/* Nút quét tài liệu */}
             <TouchableOpacity
                 style={styles.scanButton}
@@ -144,6 +167,23 @@ export default function ScanDocumentScreen() {
                     <Text style={styles.exportButtonText}>📄 Xuất PDF</Text>
                 </TouchableOpacity>
             )}
+            </View>
+            
+
+            <TouchableOpacity
+                style={styles.fab}
+                onPress={() => setShowHelp(true)}
+            >
+                <IconImage name="help" size={26} />
+            </TouchableOpacity>
+
+            {/* Hiển thị modal hướng dẫn */}
+            <HelpModal
+                visible={showHelp}
+                onClose={() => setShowHelp(false)}
+                title="Hướng dẫn sử dụng"
+                content={"1. Nhấn 'Quét tài liệu' để bắt đầu quét.\n2. Chụp ảnh tài liệu hoặc chọn ảnh cần quét.\n3. Sau khi quét xong, nhấn 'Xuất PDF' để lưu tài liệu dưới dạng PDF."}
+            />
 
             {/* Hiển thị modal loading */}
             <LoadingModal
@@ -151,6 +191,7 @@ export default function ScanDocumentScreen() {
                 progress={progress}
                 message="Đang xử lý..."
             />
+            
         </View>
     );
 }
@@ -158,7 +199,6 @@ export default function ScanDocumentScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#f7f8fa",
         padding: 16,
     },
 
@@ -212,4 +252,16 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "700",
     },
+    fab: {
+        position: "absolute",
+        right: 20,
+        bottom: 30,
+        width: 54,
+        height: 54,
+        borderRadius: 27,
+        backgroundColor: "#4dabf7",
+        alignItems: "center",
+        justifyContent: "center",
+        elevation: 5,
+    }
 });

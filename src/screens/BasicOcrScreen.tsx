@@ -4,27 +4,31 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  ActivityIndicator,
   Alert,
   StyleSheet,
+  Modal,
 } from "react-native";
-import FilePicker from "../components/FilePicker";
-import { ocrImageOffline } from "../utils/ocrImageOffline";
+
 import HeaderBack from "../components/HeaderBack";
-import { prepareImageForOCR } from "../utils/prepareImageForOCR";
-import OcrResultModal from "../components/ocr/OcrResultModal";
-import { addHistoryFile } from "../utils/history/historyManager";
-import { exportTextToDocx } from "../components/ocr/exportDocx";
+import FilePicker from "../components/FilePicker";
+import IconImage from "../components/IconImage";
 import LoadingModal from "../components/LoadingModal";
+import OcrResultModal from "../components/ocr/OcrResultModal";
+import HelpModal from "../components/HelpModal";
+
+import { ocrImageOffline } from "../utils/ocrImageOffline";
+import { prepareImageForOCR } from "../utils/prepareImageForOCR";
+import { exportTextToDocx } from "../components/ocr/exportDocx";
+import { addHistoryFile } from "../utils/history/historyManager";
 
 export default function BasicOcrScreen() {
   const [image, setImage] = useState<any>(null);
   const [ocrText, setOcrText] = useState("");
   const [showResult, setShowResult] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [docPath, setDocPath] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-
 
   const handlePick = (files: any[]) => {
     if (!files?.length) return;
@@ -33,76 +37,58 @@ export default function BasicOcrScreen() {
 
   const fakeProgress = () => {
     setProgress(10);
-
     const timer = setInterval(() => {
-      setProgress((p) => {
-        if (p >= 90) {
-          clearInterval(timer);
-          return p;
-        }
-        return p + 10;
-      });
+      setProgress((p) => (p >= 90 ? p : p + 10));
     }, 300);
-
     return timer;
   };
 
+  const handleOCR = async () => {
+    if (!image) return;
 
-const handleOCR = async () => {
-  if (!image) return;
+    let timer: any;
 
-  let timer: number | null = null;
+    try {
+      setLoading(true);
+      setProgress(0);
+      timer = fakeProgress();
 
-  try {
-    setLoading(true);
-    setProgress(0);
+      const safeUri = await prepareImageForOCR(image.uri);
+      const text = await ocrImageOffline(safeUri);
+      const finalText = text || "(Không nhận diện được chữ)";
 
-    timer = fakeProgress();
+      const filePath = await exportTextToDocx(finalText);
+      await addHistoryFile(filePath, `OCR_${Date.now()}.docx`, "ocr");
 
-    const safeUri = await prepareImageForOCR(image.uri);
-    const text = await ocrImageOffline(safeUri);
-    const finalText = text || "(Không nhận diện được chữ)";
+      clearInterval(timer);
+      setProgress(100);
 
-    const filePath = await exportTextToDocx(finalText);
-
-    await addHistoryFile(
-      filePath,
-      `OCR_${Date.now()}.docx`,
-      "ocr"
-    );
-
-    // ✅ OCR xong → full progress
-    clearInterval(timer);
-    setProgress(100);
-
-    // ⏳ cho UI kịp render 100%
-    setTimeout(() => {
+      setTimeout(() => {
+        setLoading(false);
+        setProgress(0);
+        setOcrText(finalText);
+        setDocPath(filePath);
+        setShowResult(true);
+      }, 500);
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Lỗi OCR", "Không thể đọc nội dung ảnh");
       setLoading(false);
       setProgress(0);
-      setOcrText(finalText);
-      setDocPath(filePath);
-      setShowResult(true);
-    }, 500);
-
-  } catch (err) {
-    console.log(err);
-    Alert.alert("Lỗi OCR", "Không thể đọc nội dung ảnh");
-    setLoading(false);
-    setProgress(0);
-  }
-};
-
+    }
+  };
 
   return (
     <View style={styles.container}>
       <HeaderBack title="OCR cơ bản" />
 
-      {/* 📂 PICK FILE */}
       <View style={styles.section}>
         <FilePicker onPick={handlePick} />
+        <Text style={styles.note}>
+          Chỉ chấp nhận các file có đuôi: png, jpg
+        </Text>
       </View>
 
-      {/* 🖼 PREVIEW */}
       {image && (
         <View style={styles.card}>
           <Text style={styles.label}>Ảnh đã chọn</Text>
@@ -128,10 +114,28 @@ const handleOCR = async () => {
           </TouchableOpacity>
         </View>
       )}
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowHelp(true)}
+      >
+        <IconImage name="help" size={26} />
+      </TouchableOpacity>
+
+      <HelpModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        content={
+          "1 Chỉ chấp nhận ảnh PNG, JPG\n" +
+          "2 Ảnh càng rõ thì nhận diện càng chính xác\n" +
+          "3 Không nên dùng ảnh chụp mờ hoặc quá tối"
+        }
+      />
+
       <LoadingModal
         visible={loading}
         progress={progress}
-        message="Đang nhận diện văn bản..." 
+        message="Đang nhận diện văn bản..."
       />
 
       <OcrResultModal
@@ -143,6 +147,7 @@ const handleOCR = async () => {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -152,6 +157,12 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: 16,
     paddingTop: 10,
+  },
+
+  note: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#999",
   },
 
   card: {
@@ -196,14 +207,53 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  loadingOverlay: {
+  fab: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(255,255,255,0.85)",
+    right: 20,
+    bottom: 30,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "#4dabf7",
     alignItems: "center",
     justifyContent: "center",
+    elevation: 5,
+  },
+
+  helpOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  helpBox: {
+    width: "85%",
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 16,
+  },
+
+  helpTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 12,
+  },
+
+  helpText: {
+    fontSize: 14,
+    marginBottom: 6,
+    color: "#444",
+  },
+
+  helpClose: {
+    marginTop: 16,
+    alignSelf: "flex-end",
+  },
+
+  helpCloseText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#4dabf7",
   },
 });

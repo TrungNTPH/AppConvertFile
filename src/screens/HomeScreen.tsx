@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import IconImage from '../components/IconImage';
 import {
   getHistoryFiles,
@@ -22,26 +22,25 @@ interface FeatureItem {
 
 export default function HomeScreen() {
   const normalFeatures: FeatureItem[] = [
-    { id: '1', title: 'PDF → Text', icon: 'picture-as-pdf', color: '#ff6b6b', screen: 'PdfToTextScreen' },
-    { id: '2', title: 'PDF -> Image', icon: 'image', color: '#4dabf7', screen: 'PdfToImageScreen' },
-    { id: '3', title: 'Text → PDF', icon: 'text-fields', color: '#51cf66', screen: 'TextToPdfScreen' },
-    { id: '4', title: 'Lịch sử', icon: 'history', color: '#ffa94d', screen: 'HistoryScreen' },
-    { id: '5', title: 'Ghép PDF', icon: 'merge-type', color: '#9775fa', screen: 'MergePdfScreen' },
-    { id: '6', title: 'OCR cơ bản', icon: 'scanner', color: '#20c997', screen: 'BasicOcrScreen' },
-    { id: '7', title: 'Quét tài liệu', icon: 'scanner', color: '#4dabf7', screen: 'ScanDocumentScreen' },
+    { id: '1', title: 'PDF -> Image', icon: 'image', color: '#4dabf7', screen: 'PdfToImageScreen' },
+    { id: '2', title: 'Lịch sử', icon: 'history', color: '#ffa94d', screen: 'HistoryScreen' },
+    { id: '3', title: 'Ghép PDF', icon: 'merge-type', color: '#9775fa', screen: 'MergePdfScreen' },
+    { id: '4', title: 'OCR cơ bản', icon: 'scanner', color: '#20c997', screen: 'BasicOcrScreen' },
+    { id: '5', title: 'Quét tài liệu', icon: 'scan', color: '#4dabf7', screen: 'ScanDocumentScreen' },
 
   ];
 
   const aiFeatures: FeatureItem[] = [
     { id: 'a1', title: 'Tóm tắt văn bản', icon: 'summary', color: '#845ef7', screen: 'SummaryScreen' },
-    { id: 'a2', title: 'Sửa lỗi chính tả', icon: 'edit', color: '#228be6', screen: 'FixGrammarScreen' },
   ];
 
   const [recentHistory, setRecentHistory] = useState<any[]>([]);
 
-  useEffect(() => {
-    loadRecentHistory();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadRecentHistory();
+    }, [])
+  );
 
   const loadRecentHistory = async () => {
     const data = await getHistoryFiles();
@@ -116,7 +115,7 @@ export default function HomeScreen() {
         scrollEnabled={false}
         numColumns={3}
         keyExtractor={(item) => item.id}
-        columnWrapperStyle={{ justifyContent: 'space-between' }}
+        columnWrapperStyle={{ justifyContent: 'flex-start' }}
         renderItem={renderCard}
         contentContainerStyle={{ paddingHorizontal: 20 }}
       />
@@ -140,29 +139,29 @@ export default function HomeScreen() {
     </View>
   );
 
-return (
-  <View style={{ flex: 1 }}>
-    <FlatList
-      data={recentHistory}
-      keyExtractor={(item, index) => item?.path ?? index.toString()}
-      renderItem={
-        recentHistory.length === 0
-          ? null
-          : renderHistoryItem
-      }
-      ListHeaderComponent={ListHeader}
-      ListEmptyComponent={
-        <Text style={styles.emptyHistory}>
-          Chưa có file nào gần đây
-        </Text>
-      }
-      contentContainerStyle={{
-        paddingBottom: 30,
-      }}
-      showsVerticalScrollIndicator={false}
-    />
-  </View>
-);
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={recentHistory}
+        keyExtractor={(item, index) => item?.path ?? index.toString()}
+        renderItem={
+          recentHistory.length === 0
+            ? null
+            : renderHistoryItem
+        }
+        ListHeaderComponent={ListHeader}
+        ListEmptyComponent={
+          <Text style={styles.emptyHistory}>
+            Chưa có file nào gần đây
+          </Text>
+        }
+        contentContainerStyle={{
+          paddingBottom: 30,
+        }}
+        showsVerticalScrollIndicator={false}
+      />
+    </View>
+  );
 
 }
 
@@ -224,59 +223,59 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   historyItem: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#fff',
-  padding: 12,
-  borderRadius: 14,
-  marginHorizontal: 20,
-  marginBottom: 10,
-  shadowColor: '#000',
-  shadowOpacity: 0.06,
-  shadowRadius: 6,
-  elevation: 2,
-},
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 14,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
 
-historyLeft: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  backgroundColor: '#e7f5ff',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginRight: 12,
-},
+  historyLeft: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#e7f5ff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
 
-historyName: {
-  fontSize: 14,
-  fontWeight: '600',
-  color: '#333',
-},
+  historyName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
 
-historyTime: {
-  fontSize: 12,
-  color: '#999',
-  marginTop: 2,
-},
+  historyTime: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 2,
+  },
 
-emptyHistory: {
-  color: '#999',
-  fontSize: 14,
-  marginHorizontal: 20,
-  marginBottom: 10,
-  alignContent: 'center',
-  textAlign: 'center',
-},
+  emptyHistory: {
+    color: '#999',
+    fontSize: 14,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    alignContent: 'center',
+    textAlign: 'center',
+  },
 
-viewAllBtn: {
-  alignItems: 'flex-end',
-  marginHorizontal: 20,
-  marginBottom: 20,
-},
+  viewAllBtn: {
+    alignItems: 'flex-end',
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
 
-viewAllText: {
-  color: '#4dabf7',
-  fontWeight: '600',
-},
+  viewAllText: {
+    color: '#4dabf7',
+    fontWeight: '600',
+  },
 
 });

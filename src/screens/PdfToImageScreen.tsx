@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Alert, Image, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import RNFS from 'react-native-fs'; // Import thư viện react-native-fs
+import RNFS from 'react-native-fs';
 import HeaderBack from '../components/HeaderBack';
 import FilePicker from '../components/FilePicker';
 import { convert } from 'react-native-pdf-to-image';
+import { addHistoryFile } from "../utils/history/historyManager";
+import HelpModal from '../components/HelpModal';
+import IconImage from '../components/IconImage';
 
 export default function PdfToImageScreen() {
   const [file, setFile] = useState<any | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     const loadTheme = async () => {
@@ -48,7 +52,7 @@ export default function PdfToImageScreen() {
 
   const saveImages = async () => {
     if (images.length === 0) {
-      Alert.alert('Không có hình ảnh nào để lưu.');
+      Alert.alert("Không có hình ảnh nào để lưu.");
       return;
     }
 
@@ -57,25 +61,37 @@ export default function PdfToImageScreen() {
       await RNFS.mkdir(saveDirectory);
 
       const savePromises = images.map(async (imageUri, index) => {
-        const fileName = `image_${index + 1}.jpg`;
+        const fileName = `PDF_IMG_${Date.now()}_${index + 1}.jpg`;
         const destPath = `${saveDirectory}/${fileName}`;
+
         await RNFS.copyFile(imageUri, destPath);
+
+        // ✅ ADD TO HISTORY
+        await addHistoryFile(
+          destPath,
+          fileName,
+          "pdf to image"
+        );
+
         return destPath;
       });
 
       const savedFiles = await Promise.all(savePromises);
-      Alert.alert('Lưu thành công!', `Đã lưu ${savedFiles.length} hình ảnh vào thư mục ConvertedImages.`);
+
+      Alert.alert(
+        `lưu thành công ${savedFiles.length} hình ảnh`
+      );
     } catch (error) {
-      console.error('Error saving images:', error);
-      Alert.alert('Đã xảy ra lỗi khi lưu hình ảnh.');
+      console.error("Error saving images:", error);
+      Alert.alert("Lỗi", "Không thể lưu hình ảnh");
     }
   };
 
+
   return (
-    <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
-      <View style={{ marginTop: 20 }}>
-        <HeaderBack title="Chuyển PDF sang Hình ảnh" />
-      </View>
+    <View style={{flex : 1}}>
+      <HeaderBack title="Chuyển PDF sang Hình ảnh" />
+      <View style={styles.container}>
 
       <View>
         <FilePicker onPick={handlePick} allowMultiple={false} />
@@ -109,6 +125,19 @@ export default function PdfToImageScreen() {
           </TouchableOpacity>
         </>
       )}
+      </View>
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowHelp(true)}
+      >
+        <IconImage name="help" size={26} />
+      </TouchableOpacity>
+      <HelpModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Hướng dẫn sử dụng"
+        content={"1. Chọn file PDF bạn muốn chuyển đổi.\n2. Nhấn 'Chuyển đổi' để tạo hình ảnh từ PDF.\n3. Xem trước các hình ảnh đã tạo và nhấn 'Lưu tất cả ảnh' để lưu vào thiết bị của bạn."}
+      />
     </View>
   );
 }
@@ -135,6 +164,18 @@ const styles = StyleSheet.create({
   },
   darkText: {
     color: '#e6eef8',
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 30,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "#4dabf7",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 5,
   },
   noFileText: {
     fontSize: 15,

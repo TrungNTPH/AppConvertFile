@@ -8,15 +8,17 @@ import {
   StyleSheet,
 } from "react-native";
 import Share from "react-native-share";
-
 import HeaderBack from "../components/HeaderBack";
+import HelpModal from "../components/HelpModal";
 import {
   getHistoryFiles,
   deleteHistoryFile,
 } from "../utils/history/historyManager";
+import IconImage from "../components/IconImage";
 
 export default function HistoryScreen() {
   const [files, setFiles] = useState<any[]>([]);
+  const [showHelp, setShowHelp] = useState(false);
 
   const load = async () => {
     const data = await getHistoryFiles();
@@ -33,7 +35,7 @@ export default function HistoryScreen() {
         url: path,
         failOnCancel: false,
       });
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleDelete = (item: any) => {
@@ -104,6 +106,21 @@ export default function HistoryScreen() {
           </Text>
         }
       />
+            <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowHelp(true)}
+      >
+        <IconImage name="help" size={26} />
+      </TouchableOpacity>
+      <HelpModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Hướng dẫn sử dụng"
+        content={
+        "1 Tại đây hiển thị danh sách các file bạn đã xử lý.\n" +
+        "2 Bạn có thể chia sẻ hoặc xóa các file này theo ý muốn."
+        }
+      />
     </View>
   );
 }
@@ -124,7 +141,18 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 30,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "#4dabf7",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 5,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",

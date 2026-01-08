@@ -16,6 +16,8 @@ import PdfResultModal from "../components/pdf/PdfResultModal";
 import { mergePdfFiles } from "../components/pdf/MergePDF";
 import { addHistoryFile } from "../utils/history/historyManager";
 import LoadingModal from "../components/LoadingModal";
+import HelpModal from "../components/HelpModal";
+import IconImage from "../components/IconImage";
 
 export default function MergePdfScreen() {
   const [files, setFiles] = useState<any[]>([]);
@@ -23,6 +25,7 @@ export default function MergePdfScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
 
   const handlePick = (picked: any) => {
     const pdfFiles = validatePdfFiles(picked);
@@ -83,12 +86,10 @@ export default function MergePdfScreen() {
     }
   };
 
-  const canMerge = files.length >= 2;
-
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
       <HeaderBack title="Ghép PDF" />
-
+    <View style={styles.container} >
       <FilePicker onPick={handlePick} allowMultiple />
 
       <Text style={styles.listTitle}>
@@ -113,28 +114,37 @@ export default function MergePdfScreen() {
             Chưa có file PDF nào được chọn
           </Text>
         }
+        ListFooterComponent={
+          files.length >= 2 ? (
+            <View style={styles.mergeWrapper}>
+              <TouchableOpacity
+                style={styles.mergeBtn}
+                onPress={handleMerge}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.mergeText}>
+                  Ghép PDF
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : null
+        }
       />
-
-      {/* NÚT GHÉP LUÔN HIỂN THỊ */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[
-            styles.mergeBtn,
-            !canMerge && styles.mergeBtnDisabled,
-          ]}
-          onPress={handleMerge}
-          activeOpacity={canMerge ? 0.7 : 1}
-        >
-          <Text style={styles.mergeText}>
-            Ghép PDF
-          </Text>
-          {!canMerge && (
-            <Text style={styles.hintText}>
-              (Cần ít nhất 2 file)
-            </Text>
-          )}
-        </TouchableOpacity>
       </View>
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => setShowHelp(true)}
+      >
+        <IconImage name="help" size={26} />
+      </TouchableOpacity>
+
+      <HelpModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Hướng dẫn sử dụng"
+        content={"1. Chọn ít nhất 2 file PDF bạn muốn ghép.\n2. Nhấn nút 'Ghép PDF' để bắt đầu quá trình ghép file.\n3. Sau khi ghép xong, bạn có thể xem và chia sẻ file PDF đã ghép."}
+      />
 
       {/* Loading modal */}
       <LoadingModal
@@ -156,7 +166,7 @@ export default function MergePdfScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f7f7f7",
+    padding: 16
   },
   listTitle: {
     fontSize: 15,
@@ -171,24 +181,16 @@ const styles = StyleSheet.create({
     color: "#888",
     fontStyle: "italic",
   },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderColor: "#eee",
+  mergeWrapper: {
+    marginTop: 20,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   mergeBtn: {
     backgroundColor: "#4dabf7",
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: "center",
-  },
-  mergeBtnDisabled: {
-    backgroundColor: "#b5d9f8",
   },
   mergeText: {
     color: "#fff",
@@ -200,4 +202,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#eef6ff",
   },
+    fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 30,
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: "#4dabf7",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 5,
+  }
 });

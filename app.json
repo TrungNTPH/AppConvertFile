@@ -1,4 +1,10 @@
 {
   "name": "AppConvert",
-  "displayName": "AppConvert"
+  "displayName": "AppConvert",
+  "extra": {
+    "eas": {
+      "projectId": "9e3c16dc-1cc6-4846-b90a-0d8e9ad236a2"
+    }
+  },
+  "owner": "trungntph"
 }

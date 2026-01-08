@@ -26,15 +26,11 @@ export default function OcrResultModal({
   onClose,
 }: Props) {
 
-  console.log("📤 MODAL FILE PATH:", filePath);
-
-  /** 📋 Copy text */
   const copyText = () => {
     Clipboard.setString(text);
     Alert.alert("Đã copy", "Nội dung OCR đã được copy");
   };
 
-  /** 📥 Tải file về máy (Download/AppConvert) */
   const downloadDoc = async () => {
     if (!filePath) {
       Alert.alert("Lỗi", "Không tìm thấy file");
@@ -57,7 +53,6 @@ export default function OcrResultModal({
     }
   };
 
-  /** 📤 Chia sẻ file */
   const shareDoc = async () => {
     if (!filePath) {
       Alert.alert("Lỗi", "Không tìm thấy file");

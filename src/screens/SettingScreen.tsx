@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View,  } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import HeaderBack from '../components/HeaderBack';
 
 export default function SettingScreen() {
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -26,11 +27,15 @@ export default function SettingScreen() {
   };
 
   return (
-    <View style={[styles.container, isDarkMode ? styles.darkContainer : styles.lightContainer]}>
-      <Text style={[styles.title, isDarkMode ? styles.darkText : styles.lightText]}>Settings</Text>
+    <View style={{flex: 1}}>
+      <HeaderBack title="Cài đặt" />
+      <Text>
+        Setting Screen
+      </Text>
+      {/* <Text style={[styles.title, isDarkMode ? styles.darkText : styles.lightText]}>Settings</Text>
       <TouchableOpacity style={styles.button} onPress={toggleDarkMode}>
         <Text style={styles.buttonText}>Toggle Dark Mode</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }
@@ -38,8 +43,7 @@ export default function SettingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 16,
   },
   lightContainer: {
     backgroundColor: '#f7f7f7',
