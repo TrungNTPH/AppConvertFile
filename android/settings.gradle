@@ -7,3 +7,11 @@ includeBuild('../node_modules/@react-native/gradle-plugin')
 include ':react-native-pdf-to-image'
 project(':react-native-pdf-to-image').projectDir =
     new File(rootProject.projectDir, '../node_modules/react-native-pdf-to-image/android')
+apply from: new File(
+  ["node", "--print", "require.resolve('expo/package.json')"]
+    .execute(null, rootDir)
+    .text
+    .trim(),
+  "../scripts/autolinking.gradle"
+)
+useExpoModules()
